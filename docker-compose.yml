@@ -1,0 +1,80 @@
+# =============================================================================
+# Docker Compose — Development Environment
+# =============================================================================
+# Usage:
+#   Start:  docker-compose up -d
+#   Stop:   docker-compose down
+#   Logs:   docker-compose logs -f app
+#   Shell:  docker-compose exec app bash
+# =============================================================================
+
+version: "3.9"
+
+services:
+  app:
+    build:
+      context: .
+      target: builder         # Use builder stage for development (has build tools)
+    volumes:
+      - .:/app                # Live reload: mount source code
+    ports:
+      - "${APP_PORT:-8000}:${APP_PORT:-8000}"
+    env_file:
+      - .env
+    environment:
+      - APP_ENV=development
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/toydb
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: ["python", "-m", "src.main"]
+    restart: unless-stopped
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: toydb
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  test:
+    build:
+      context: .
+      target: builder
+    volumes:
+      - .:/app
+    env_file:
+      - .env.example
+    environment:
+      - APP_ENV=test
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/toydb_test
+    depends_on:
+      - db
+    command: ["python", "-m", "pytest", "tests/", "-v", "--cov=src", "--cov-report=term-missing"]
+    profiles:
+      - test
+
+volumes:
+  postgres_data:

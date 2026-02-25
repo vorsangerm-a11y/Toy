@@ -1,0 +1,61 @@
+# .dockerignore — exclude files from Docker build context
+# Keep this lean: only exclude what shouldn't be in the container
+
+# Git
+.git/
+.gitignore
+
+# Python artifacts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environments
+venv/
+env/
+.venv/
+.env/
+
+# Environment secrets (NEVER in container image)
+.env
+.env.local
+.env.*.local
+
+# Testing (not needed in production image)
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+tests/
+
+# Development tools
+.pre-commit-config.yaml
+.mypy_cache/
+.ruff_cache/
+
+# IDEs
+.vscode/
+.idea/
+
+# Documentation
+docs/
+*.md
+
+# CI/CD
+.github/
+
+# Mault
+.mault/
+.memory-layer/
+mault-verify-*.sh
+mault-canary/
+
+# OS
+.DS_Store
+Thumbs.db
