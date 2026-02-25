@@ -59,6 +59,13 @@ def check_coverage_ratchet() -> int:
         return 0
 
     baseline = load_baseline()
+
+    if not baseline:
+        print("No baseline found — creating baseline now.")
+        save_baseline(coverage)
+        print(f"PASS: Baseline set with {len(coverage)} file(s) at current coverage")
+        return 0
+
     violations = 0
 
     for file_path, pct in coverage.items():

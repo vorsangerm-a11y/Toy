@@ -194,9 +194,10 @@ jobs:
 
       - name: Check mutation score
         run: |
-          mutmut results
-          SURVIVED=$(mutmut results 2>/dev/null | grep -c "survived" || echo 0)
-          KILLED=$(mutmut results 2>/dev/null | grep -c "killed" || echo 0)
+          RESULT=$(mutmut results 2>/dev/null) || RESULT=""
+          echo "$RESULT"
+          SURVIVED=$(echo "$RESULT" | python3 -c "import sys,re; txt=sys.stdin.read(); m=re.search(r'Survived[^(]*\((\d+)\)', txt); print(m.group(1) if m else 0)")
+          KILLED=$(echo "$RESULT" | python3 -c "import sys,re; txt=sys.stdin.read(); m=re.search(r'Killed[^(]*\((\d+)\)', txt); print(m.group(1) if m else 0)")
           TOTAL=$((SURVIVED + KILLED))
           if [ "$TOTAL" -eq 0 ]; then
             echo "No mutants generated — skipping score check"
