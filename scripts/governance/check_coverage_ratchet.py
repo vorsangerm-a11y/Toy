@@ -8,11 +8,11 @@ Existing files are grandfathered — coverage can only improve.
 Reads baseline from .memory-layer/baselines/coverage.json
 Blocks commit if new files are below threshold.
 """
+
 import json
 import subprocess
 import sys
 from pathlib import Path
-
 
 BASELINE_FILE = Path(".memory-layer/baselines/coverage.json")
 COVERAGE_THRESHOLD = 80
@@ -21,8 +21,17 @@ COVERAGE_THRESHOLD = 80
 def run_coverage() -> dict[str, float]:
     """Run pytest with coverage and parse results."""
     result = subprocess.run(
-        ["python", "-m", "pytest", "tests/unit/", "--cov=src",
-         "--cov-report=json", "--co", "-q", "--no-header"],
+        [
+            "python",
+            "-m",
+            "pytest",
+            "tests/unit/",
+            "--cov=src",
+            "--cov-report=json",
+            "--co",
+            "-q",
+            "--no-header",
+        ],
         capture_output=True,
         text=True,
     )
@@ -33,15 +42,12 @@ def run_coverage() -> dict[str, float]:
 
     data = json.loads(coverage_file.read_text())
     files = data.get("files", {})
-    return {
-        path: info["summary"]["percent_covered"]
-        for path, info in files.items()
-    }
+    return {path: info["summary"]["percent_covered"] for path, info in files.items()}
 
 
 def load_baseline() -> dict[str, float]:
     if BASELINE_FILE.exists():
-        return json.loads(BASELINE_FILE.read_text())
+        return json.loads(BASELINE_FILE.read_text())  # type: ignore[no-any-return]
     return {}
 
 
@@ -72,14 +78,18 @@ def check_coverage_ratchet() -> int:
         if file_path not in baseline:
             # New file — enforce threshold
             if pct < COVERAGE_THRESHOLD:
-                print(f"  FAIL: {file_path} is {pct:.1f}% covered (new file, requires {COVERAGE_THRESHOLD}%)")
+                print(
+                    f"  FAIL: {file_path} is {pct:.1f}% covered (new file, requires {COVERAGE_THRESHOLD}%)"
+                )
                 violations += 1
             else:
                 print(f"  OK:   {file_path} {pct:.1f}% (new file, passes {COVERAGE_THRESHOLD}%)")
         else:
             baseline_pct = baseline[file_path]
             if pct < baseline_pct - 5:  # Allow 5% tolerance
-                print(f"  WARN: {file_path} coverage dropped from {baseline_pct:.1f}% to {pct:.1f}%")
+                print(
+                    f"  WARN: {file_path} coverage dropped from {baseline_pct:.1f}% to {pct:.1f}%"
+                )
             else:
                 print(f"  OK:   {file_path} {pct:.1f}% (grandfathered at {baseline_pct:.1f}%)")
 

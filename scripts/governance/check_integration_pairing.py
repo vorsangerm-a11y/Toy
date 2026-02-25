@@ -7,6 +7,7 @@ The buddy system ensures services are tested with real I/O.
 
 Pattern: src/services/foo_service.py -> tests/integration/test_foo_service.py
 """
+
 import sys
 from pathlib import Path
 

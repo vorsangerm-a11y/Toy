@@ -262,3 +262,52 @@ jobs:
           tags: toy:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  # ---------------------------------------------------------------------------
+  # Job 7: PR Title Validation (Step 6 — conventional commits enforcement)
+  # ---------------------------------------------------------------------------
+  validate-pr-title:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    steps:
+      - name: Validate PR title
+        uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          types: |
+            feat
+            fix
+            docs
+            chore
+            refactor
+            test
+            deps
+            ci
+            style
+            perf
+          requireScope: false
+
+  # ---------------------------------------------------------------------------
+  # Job 8: Branch Name Validation (Step 6 — naming convention enforcement)
+  # ---------------------------------------------------------------------------
+  validate-branch-name:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate branch name
+        run: |
+          BRANCH="${{ github.head_ref }}"
+          PATTERN="^(feat|fix|docs|chore|refactor|test|deps)/"
+          if [[ "$BRANCH" == "main" || "$BRANCH" == "develop" ]]; then
+            echo "Default branch — skipping validation"
+            exit 0
+          fi
+          if [[ ! "$BRANCH" =~ $PATTERN ]]; then
+            echo "::error::Invalid branch name: $BRANCH"
+            echo "Branch must match: feat/, fix/, docs/, chore/, refactor/, test/, deps/"
+            exit 1
+          fi
+          echo "Branch name valid: $BRANCH"
