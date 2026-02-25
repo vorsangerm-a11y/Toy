@@ -19,6 +19,9 @@ mypy==1.14.1
 # Security
 pip-audit==2.8.0
 
+# Mutation Testing
+mutmut==2.5.1
+
 # Pre-commit
 pre-commit==4.0.1
 

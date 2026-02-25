@@ -4,10 +4,12 @@
 # Triggers: push to main/develop, pull requests to main
 #
 # Jobs:
-#   1. lint     — ruff, mypy type checking
-#   2. test     — pytest with coverage
-#   3. security — pip-audit vulnerability scan
-#   4. build    — Docker image build verification
+#   1. lint       — ruff, mypy type checking
+#   2. test       — pytest with coverage
+#   3. security   — pip-audit vulnerability scan
+#   4. governance — mock tax, type safety, coverage ratchet, integration pairing
+#   5. mutation   — mutmut mutation testing score
+#   6. build      — Docker image build verification
 # =============================================================================
 
 name: CI
@@ -128,12 +130,88 @@ jobs:
         run: pip-audit -r requirements.txt --severity moderate
 
   # ---------------------------------------------------------------------------
-  # Job 4: Docker Build Verification
+  # Job 4: Governance (Step 8 — mock tax, type safety, coverage, pairing)
+  # ---------------------------------------------------------------------------
+  governance:
+    name: Governance Gates
+    runs-on: ubuntu-latest
+    needs: [test]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      - name: Install dev dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Mock Tax check
+        run: python scripts/governance/check_mock_tax.py
+
+      - name: Type Safety gate
+        run: python scripts/governance/check_type_safety.py
+
+      - name: Coverage Ratchet
+        run: python scripts/governance/check_coverage_ratchet.py
+
+      - name: Integration Test Pairing
+        run: python scripts/governance/check_integration_pairing.py
+
+  # ---------------------------------------------------------------------------
+  # Job 5: Mutation Testing
+  # ---------------------------------------------------------------------------
+  mutation:
+    name: Mutation Testing
+    runs-on: ubuntu-latest
+    needs: [test]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+
+      - name: Run mutmut
+        run: mutmut run --paths-to-mutate src/ --tests-dir tests/unit/
+        continue-on-error: true
+
+      - name: Check mutation score
+        run: |
+          mutmut results
+          SURVIVED=$(mutmut results 2>/dev/null | grep -c "survived" || echo 0)
+          KILLED=$(mutmut results 2>/dev/null | grep -c "killed" || echo 0)
+          TOTAL=$((SURVIVED + KILLED))
+          if [ "$TOTAL" -eq 0 ]; then
+            echo "No mutants generated — skipping score check"
+            exit 0
+          fi
+          SCORE=$(python3 -c "print(round($KILLED / $TOTAL * 100))")
+          echo "Mutation score: ${SCORE}% (${KILLED}/${TOTAL} killed)"
+          if [ "$SCORE" -lt 60 ]; then
+            echo "FAIL: Mutation score ${SCORE}% is below threshold of 60%"
+            exit 1
+          fi
+          echo "PASS: Mutation score ${SCORE}% meets threshold"
+
+  # ---------------------------------------------------------------------------
+  # Job 6: Docker Build Verification
   # ---------------------------------------------------------------------------
   build:
     name: Docker Build
     runs-on: ubuntu-latest
-    needs: [lint, test]
+    needs: [lint, test, governance]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
