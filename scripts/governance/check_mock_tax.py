@@ -13,11 +13,12 @@ Test:Source Ratio    Interpretation        Action
 
 Also scans for adversarial mocking patterns (--scan-only mode).
 """
+
+from __future__ import annotations
+
 import argparse
-import ast
 import sys
 from pathlib import Path
-
 
 MOCK_PATTERNS = [
     "mock.patch",
@@ -94,8 +95,10 @@ def check_mock_tax(scan_only: bool = False) -> int:
         ratio = test_loc / src_loc
 
         if ratio > 3.0:
-            print(f"  FAIL: {test_file} is {ratio:.1f}x its source ({test_file} has {test_loc} LOC, {source_file} has {src_loc} LOC)")
-            print(f"        → Delete unit test and write integration test instead")
+            print(
+                f"  FAIL: {test_file} is {ratio:.1f}x its source ({test_file} has {test_loc} LOC, {source_file} has {src_loc} LOC)"
+            )
+            print("        → Delete unit test and write integration test instead")
             violations += 1
         elif ratio > 2.0:
             print(f"  WARN: {test_file} is {ratio:.1f}x its source — consider integration test")
@@ -112,6 +115,8 @@ def check_mock_tax(scan_only: bool = False) -> int:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--scan-only", action="store_true", help="Only scan for adversarial patterns")
+    parser.add_argument(
+        "--scan-only", action="store_true", help="Only scan for adversarial patterns"
+    )
     args = parser.parse_args()
     sys.exit(check_mock_tax(scan_only=args.scan_only))

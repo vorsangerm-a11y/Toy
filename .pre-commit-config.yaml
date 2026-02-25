@@ -1,5 +1,5 @@
 # =============================================================================
-# Pre-commit Hook Configuration — Python (9 Governance Layers)
+# Pre-commit Hook Configuration — Python (10 Governance Layers)
 # =============================================================================
 # Install: pip install pre-commit && pre-commit install
 # Run all:  pre-commit run --all-files
@@ -8,13 +8,14 @@
 # Layers of Protection:
 #   1. Compilation & Static Analysis (ruff + mypy)
 #   2. Rising Tide (Mock Tax) — 2x rule enforcement
-#   3. Ruff Formatting
+#   3. Standard file hygiene
 #   4. Adversarial Mock Scan
 #   5. Precision Coverage Ratchet
-#   6. Security Gate (pip-audit)
-#   7. Integration Test Pairing check
-#   8. Type Safety Gate (type: ignore ratchet)
-#   9. Dead Code Gate (no bare excepts)
+#   6. Secret Detection (detect-secrets)
+#   7. Security Gate (pip-audit)
+#   8. Integration Test Pairing check
+#   9. Type Safety Gate (type: ignore ratchet)
+#  10. Dead Code Gate (no bare excepts)
 # =============================================================================
 
 repos:
@@ -101,25 +102,36 @@ repos:
         always_run: false
 
   # ===========================================================================
-  # Layer 6: Security Gate
+  # Layer 6: Secret Detection
+  # ===========================================================================
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+        name: "Layer 6: Secret Detection"
+        args: ['--baseline', '.secrets.baseline']
+        exclude: package-lock\.json|\.env\.example|\.secrets\.baseline
+
+  # ===========================================================================
+  # Layer 7: Security Gate (pip-audit — no --severity flag in pip-audit 2.x)
   # ===========================================================================
   - repo: local
     hooks:
       - id: security-gate
-        name: "Layer 6: Security Gate (pip-audit)"
-        entry: pip-audit -r requirements.txt --severity moderate
+        name: "Layer 7: Security Gate (pip-audit)"
+        entry: pip-audit -r requirements.txt
         language: python
         pass_filenames: false
         always_run: false
         additional_dependencies: [pip-audit]
 
   # ===========================================================================
-  # Layer 7: Integration Test Pairing
+  # Layer 8: Integration Test Pairing
   # ===========================================================================
   - repo: local
     hooks:
       - id: integration-test-pairing
-        name: "Layer 7: Integration Test Pairing"
+        name: "Layer 8: Integration Test Pairing"
         entry: python scripts/governance/check_integration_pairing.py
         language: python
         types: [python]
@@ -127,12 +139,12 @@ repos:
         files: "^src/services/"
 
   # ===========================================================================
-  # Layer 8: Type Safety Gate (type: ignore ratchet)
+  # Layer 9: Type Safety Gate (type: ignore ratchet)
   # ===========================================================================
   - repo: local
     hooks:
       - id: type-safety-gate
-        name: "Layer 8: Type Safety Gate"
+        name: "Layer 9: Type Safety Gate"
         entry: python scripts/governance/check_type_safety.py
         language: python
         types: [python]
@@ -140,21 +152,13 @@ repos:
         always_run: false
 
   # ===========================================================================
-  # Layer 9: Dead Code Gate (no bare excepts)
+  # Layer 10: Dead Code Gate (no bare excepts)
   # ===========================================================================
   - repo: local
     hooks:
       - id: dead-code-gate
-        name: "Layer 9: Dead Code Gate (bare excepts)"
-        entry: python -c "
-import subprocess, sys
-result = subprocess.run(['grep', '-rn', 'except:', 'src/'], capture_output=True, text=True)
-if result.stdout:
-    print('FAIL: bare except found (use specific exception types):')
-    print(result.stdout)
-    sys.exit(1)
-print('PASS: no bare excepts')
-"
+        name: "Layer 10: Dead Code Gate (bare excepts)"
+        entry: python scripts/hooks/check_bare_excepts.py
         language: python
         pass_filenames: false
         always_run: false

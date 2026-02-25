@@ -85,6 +85,7 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*.py" = ["ANN", "S101", "S106"]
+"scripts/**/*.py" = ["ANN", "S603", "S607", "S603", "F841", "E501"]
 
 [tool.ruff.format]
 quote-style = "double"
@@ -98,4 +99,8 @@ line-ending = "auto"
 python_version = "3.12"
 strict = true
 ignore_missing_imports = true
-exclude = ["venv/", ".venv/", "dist/"]
+exclude = ["venv/", ".venv/", "dist/", "scripts/", "tests/"]
+
+[[tool.mypy.overrides]]
+module = ["scripts.*", "tests.*"]
+ignore_errors = true

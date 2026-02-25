@@ -15,11 +15,11 @@ Reads baseline from .memory-layer/baselines/type-safety.json
 Blocks commit if current count exceeds baseline.
 Updates baseline only when count decreases.
 """
+
 import json
 import re
 import sys
 from pathlib import Path
-
 
 BASELINE_FILE = Path(".memory-layer/baselines/type-safety.json")
 
@@ -52,7 +52,7 @@ def count_holes(src_path: Path = Path("src")) -> dict[str, int]:
 
 def load_baseline() -> dict[str, int]:
     if BASELINE_FILE.exists():
-        return json.loads(BASELINE_FILE.read_text())
+        return json.loads(BASELINE_FILE.read_text())  # type: ignore[no-any-return]
     return {}
 
 
@@ -79,7 +79,9 @@ def check_type_safety() -> int:
 
     if current_total > baseline_total:
         added = current_total - baseline_total
-        print(f"FAIL: Type safety holes INCREASED by {added} (baseline: {baseline_total}, current: {current_total})")
+        print(
+            f"FAIL: Type safety holes INCREASED by {added} (baseline: {baseline_total}, current: {current_total})"
+        )
         print("  → Remove the new type: ignore / Any / cast() usages")
         return 1
 

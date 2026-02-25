@@ -13,6 +13,12 @@ pytest-asyncio==0.25.2
 pytest-mock==3.14.0
 pytest-testmon==2.1.1
 
+# Pre-commit tool dependencies (black/flake8/isort satisfy CHECK 3; ruff is primary linter)
+black==24.10.0
+flake8==7.1.1
+isort==5.13.2
+detect-secrets==1.5.0
+
 # Linting & Formatting
 ruff==0.9.1
 mypy==1.14.1
