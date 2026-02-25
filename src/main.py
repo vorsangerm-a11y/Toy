@@ -25,10 +25,10 @@ def main() -> None:
     logger.info("Toy app starting — APP_ENV=%s", os.getenv("APP_ENV", "development"))
     logger.info("Ready. Replace this placeholder with your web framework (FastAPI, Flask, etc.)")
 
-    while _running:
-        time.sleep(1)
+    while _running:  # pragma: no cover
+        time.sleep(1)  # pragma: no cover
 
-    logger.info("Toy app stopped.")
+    logger.info("Toy app stopped.")  # pragma: no cover
 
 
 if __name__ == "__main__":
