@@ -210,7 +210,7 @@ Detectors:
         minSubdirs: 3
         excludePatterns: ["__pycache__/**", "*.egg-info/**"]
       - path: "."
-        maxRootFiles: 15
+        maxRootFiles: 20
         excludePatterns: ["venv/**", ".venv/**", "__pycache__/**", ".git/**", "dist/**"]
 
   # UC08: Configuration Chaos
@@ -260,7 +260,7 @@ Detectors:
   # Tracks whether key scaffold files are present.
   projectScaffolding:
     enabled: true
-    rootMaxFiles: 15
+    rootMaxFiles: 20
 
   # Dead End Directories (informational)
   # Detects empty or nearly-empty directories that serve no purpose.
