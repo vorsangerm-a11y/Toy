@@ -91,6 +91,8 @@ debug_*
 .memory-layer/logs/
 .memory-layer/archive/
 .mault/*.proof
+.mault/audit-config.json
+.mault/machine-info.json
 
 
 # Mault Memory Layer (auto)
