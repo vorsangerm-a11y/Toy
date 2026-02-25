@@ -269,3 +269,190 @@ Detectors:
     ignoreGlobs: ["**/venv/**", "**/.venv/**", "**/__pycache__/**", "**/.git/**"]
     maxFiles: 500
     timeBudgetMs: 5000
+
+  # UC16: Dependency Health (Pro)
+  # Scans for vulnerable packages using pip-audit / npm audit.
+  dependencyHealth:
+    enabled: true
+    severityThreshold: "moderate"
+
+  # UC17: Architecture Diagrams (Pro)
+  # Generates Mermaid dependency graphs from imports.
+  productionReadiness:
+    enabled: true
+
+# =============================================================================
+# UC13: APPLICATION FLOW ANALYSIS
+# =============================================================================
+# Maps files to business flows and tracks high-impact dependencies.
+
+applicationFlows:
+  - id: authentication
+    name: "Authentication Flow"
+    description: "User login, logout, session, and token management"
+
+  - id: data-access
+    name: "Data Access Layer"
+    description: "Database connections, ORM, and repository operations"
+
+  - id: api-core
+    name: "API Core"
+    description: "Main API endpoints, routing, and request handling"
+
+  - id: business-logic
+    name: "Business Logic"
+    description: "Core business rules and domain services"
+
+flows:
+  authentication:
+    name: "Authentication Flow"
+    description: "User authentication, authorization, and session management"
+    critical: true
+    files:
+      - "**/auth*.py"
+      - "**/login*.py"
+      - "**/session*.py"
+      - "**/token*.py"
+      - "**/middleware/auth*.py"
+
+  data-access:
+    name: "Data Access Layer"
+    description: "Database and ORM operations"
+    critical: true
+    files:
+      - "**/db*.py"
+      - "**/database*.py"
+      - "**/repository*.py"
+      - "**/models/**/*.py"
+
+  api-core:
+    name: "API Core"
+    description: "Main API routing and handlers"
+    critical: true
+    files:
+      - "**/api*.py"
+      - "**/routes*.py"
+      - "**/views*.py"
+      - "**/endpoints*.py"
+
+  business-logic:
+    name: "Business Logic"
+    description: "Core business rules and domain services"
+    critical: true
+    files:
+      - "**/services/**/*.py"
+      - "**/domain/**/*.py"
+
+applicationFlowBlindness:
+  enabled: true
+  thresholds:
+    warnOnDirectDependents: 5
+    warnOnTransitiveDependents: 15
+  excludePatterns:
+    - "**/venv/**"
+    - "**/.venv/**"
+    - "**/__pycache__/**"
+    - "**/test_*.py"
+    - "**/*_test.py"
+    - "**/tests/**"
+    - "**/.pytest_cache/**"
+
+# =============================================================================
+# UC14: MONOLITH DETECTION
+# =============================================================================
+# Alerts when files or functions exceed LOC thresholds.
+
+monolithDetection:
+  enabled: true
+  thresholds:
+    sourceWarnLoc: 750
+    sourceFailLoc: 1500
+    testWarnLoc: 1500
+    testFailLoc: 3000
+    maxFunctionLoc: 100
+  excludePatterns: []
+
+# =============================================================================
+# TEST PYRAMID DETECTOR (Pro)
+# =============================================================================
+# Configures which files the Test Pyramid Detector scans for missing tests,
+# layer compliance, and Mock Tax enforcement.
+
+testPyramid:
+  enabled: true
+  sourcePatterns:
+    - "src/**/*.py"
+  excludePatterns:
+    - "**/venv/**"
+    - "**/.venv/**"
+    - "**/__pycache__/**"
+    - "**/test_*.py"
+    - "**/*_test.py"
+    - "**/conftest.py"
+    - "**/__init__.py"
+  testPatterns:
+    - "tests/test_*.py"
+    - "tests/**/test_*.py"
+
+# =============================================================================
+# UC18: STRUCTURAL GOVERNANCE (Pro)
+# =============================================================================
+# rules must be at top-level (not nested under Detectors).
+# Assertion types: export_exists, function_signature, import_exists,
+#                  ast_skeleton, forbidden_pattern, semantic_similarity
+
+rules:
+  # No print() in production code
+  - id: LOG-001
+    name: "No Print Statements"
+    severity: warning
+    files: "src/**/*.py"
+    description: "Use logging module instead of print()"
+    assertions:
+      - type: forbidden_pattern
+        pattern: "print\\s*\\("
+        message: "Use logging module instead of print()"
+
+  # No debug breakpoints
+  - id: DEBUG-001
+    name: "No Breakpoints"
+    severity: error
+    files: "**/*.py"
+    description: "Remove breakpoint() and pdb before committing"
+    assertions:
+      - type: forbidden_pattern
+        pattern: "breakpoint\\s*\\(|import\\s+pdb|pdb\\.set_trace"
+        message: "Remove debug breakpoints before committing"
+
+  # No focused tests
+  - id: TEST-001
+    name: "No Focused Tests"
+    severity: error
+    files: "tests/**/*.py"
+    description: "Prevent committing focused tests"
+    assertions:
+      - type: forbidden_pattern
+        pattern: "@pytest\\.mark\\.only|@only"
+        message: "Remove focused test markers before committing"
+
+  # No bare except
+  - id: ERR-001
+    name: "No Bare Except"
+    severity: warning
+    files: "**/*.py"
+    description: "Avoid bare except clauses"
+    assertions:
+      - type: forbidden_pattern
+        pattern: "except\\s*:"
+        message: "Use specific exception types instead of bare except"
+
+  # No wildcard imports
+  - id: IMPORT-001
+    name: "No Wildcard Imports"
+    severity: warning
+    files: "**/*.py"
+    description: "Avoid wildcard imports"
+    assertions:
+      - type: forbidden_pattern
+        pattern: "from\\s+\\w+\\s+import\\s+\\*"
+        message: "Use explicit imports instead of wildcard imports"

@@ -1,0 +1,25 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '[mault-hook] pre-write: enforcing TDD and zone boundaries'"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '[mault-hook] stop: verifying test coverage before session ends'"
+          }
+        ]
+      }
+    ]
+  }
+}
