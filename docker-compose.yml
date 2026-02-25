@@ -8,8 +8,6 @@
 #   Shell:  docker-compose exec app bash
 # =============================================================================
 
-version: "3.9"
-
 services:
   app:
     build:
