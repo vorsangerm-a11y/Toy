@@ -1,0 +1,271 @@
+version: 1
+
+# =============================================================================
+# UC02: LEGACY PATH PREVENTION
+# =============================================================================
+# Detect deprecated imports and function calls that should no longer be used.
+
+deprecatedPatterns:
+  # ----- Python 2/3 Migration -----
+  - id: dep-optparse
+    import: optparse
+    message: "optparse is deprecated since Python 2.7. Use 'argparse' instead."
+    languages: [python]
+
+  - id: dep-urllib2
+    import: urllib2
+    message: "urllib2 is Python 2 only. Use 'urllib.request' instead."
+    languages: [python]
+
+  - id: dep-httplib
+    import: httplib
+    message: "httplib is Python 2 only. Use 'http.client' instead."
+    languages: [python]
+
+  - id: dep-imp
+    import: imp
+    message: "imp module is deprecated since Python 3.4. Use 'importlib' instead."
+    languages: [python]
+
+  - id: dep-cgi
+    import: cgi
+    message: "cgi module is deprecated since Python 3.11. Use modern web frameworks."
+    languages: [python]
+
+  - id: dep-crypt
+    import: crypt
+    message: "crypt module is deprecated since Python 3.11. Use 'passlib' instead."
+    languages: [python]
+
+  - id: dep-pipes
+    import: pipes
+    message: "pipes module is deprecated since Python 3.11. Use 'subprocess' instead."
+    languages: [python]
+
+  - id: dep-getopt
+    import: getopt
+    message: "getopt is legacy. Use 'argparse' or 'click' instead."
+    languages: [python]
+
+  - id: dep-distutils
+    import: distutils
+    message: "distutils is deprecated since Python 3.10. Use 'setuptools' instead."
+    languages: [python]
+
+  - id: dep-pkg-resources
+    import: pkg_resources
+    message: "pkg_resources is deprecated. Use 'importlib.metadata' instead."
+    languages: [python]
+
+  # ----- Deprecated Functions -----
+  - id: dep-os-popen
+    functionCall: os.popen
+    message: "os.popen is deprecated. Use 'subprocess.run()' instead."
+    languages: [python]
+
+  - id: dep-os-system
+    functionCall: os.system
+    message: "os.system is deprecated. Use 'subprocess.run()' instead."
+    languages: [python]
+
+  # ----- Security Deprecations -----
+  - id: dep-md5
+    functionCall: hashlib.md5
+    message: "MD5 is cryptographically broken. Use 'hashlib.sha256' for security."
+    languages: [python]
+
+  - id: dep-sha1
+    functionCall: hashlib.sha1
+    message: "SHA1 is deprecated for security. Use 'hashlib.sha256' instead."
+    languages: [python]
+
+  - id: dep-random-security
+    functionCall: random.random
+    message: "random module is not cryptographically secure. Use 'secrets' for security."
+    languages: [python]
+
+  # ----- Library Deprecations -----
+  - id: dep-nose
+    import: nose
+    message: "nose is deprecated. Migrate to 'pytest' instead."
+    languages: [python]
+
+  - id: dep-mock
+    import: mock
+    message: "mock library is deprecated. Use 'unittest.mock' instead."
+    languages: [python]
+
+# =============================================================================
+# DETECTORS CONFIGURATION (Core UCs: UC01-UC12)
+# =============================================================================
+
+Detectors:
+  # UC01: Directory Reinforcement
+  # Flags files that are placed in the wrong directory based on their name.
+  directoryReinforcement:
+    enabled: true
+    rules:
+      # Service files
+      - pattern: "**/*_service.py"
+        expectedDir: "src/services"
+        reason: "Service files should be in src/services/"
+
+      # Repository/DAO files
+      - pattern: "**/*_repository.py"
+        expectedDir: "src/repositories"
+        reason: "Repository files should be in src/repositories/"
+      - pattern: "**/*_dao.py"
+        expectedDir: "src/repositories"
+        reason: "DAO files should be in src/repositories/"
+
+      # Utility files
+      - pattern: "**/*_util*.py"
+        expectedDir: "src/utils"
+        reason: "Utility files should be in src/utils/"
+      - pattern: "**/*_helper*.py"
+        expectedDir: "src/utils"
+        reason: "Helper files should be in src/utils/"
+      - pattern: "**/utils_*.py"
+        expectedDir: "src/utils"
+        reason: "Utility files should be in src/utils/"
+
+      # Model files
+      - pattern: "**/*_model.py"
+        expectedDir: "src/models"
+        reason: "Model files should be in src/models/"
+
+      # Test files
+      - pattern: "**/test_*.py"
+        expectedDir: "tests"
+        reason: "Test files should be in tests/"
+      - pattern: "**/*_test.py"
+        expectedDir: "tests"
+        reason: "Test files should be in tests/"
+
+      # Configuration files
+      - pattern: "**/config*.py"
+        expectedDir: "src/config"
+        reason: "Configuration files should be in src/config/"
+      - pattern: "**/settings*.py"
+        expectedDir: "src/config"
+        reason: "Settings files should be in src/config/"
+
+  # UC03: Naming Convention
+  # Flags files and code that don't follow snake_case / PascalCase rules.
+  namingConvention:
+    enabled: true
+    fileNaming: "snake_case"
+    excludePatterns:
+      - "**/conftest.py"
+      - "**/__init__.py"
+      - "**/*.config.*"
+      - "**/Makefile"
+      - "**/Dockerfile"
+      - "**/Pipfile"
+    variableNaming: "snake_case"
+    functionNaming: "snake_case"
+    classNaming: "PascalCase"
+    constantNaming: "SCREAMING_SNAKE_CASE"
+
+  # UC04: Environment Reinforcement
+  # Warns when hardcoded paths or commands differ from the declared environment.
+  environmentReinforcement:
+    enabled: true
+    checkPaths: true
+    checkCommands: true
+
+  # UC06: Temporary Files
+  # Flags scratch files, backups, and temp files that should not be committed.
+  tempFiles:
+    enabled: true
+    patterns:
+      - "**/*.tmp"
+      - "**/temp_*"
+      - "**/temp-*"
+      - "**/temp.*"
+      - "**/scratch_*"
+      - "**/scratch-*"
+      - "**/scratch.*"
+      - "**/scratchpad.*"
+      - "**/*.bak"
+      - "**/*_backup.*"
+      - "**/*-backup.*"
+      - "**/*_old.*"
+      - "**/*-old.*"
+      - "**/*.backup"
+      - "**/debug_*"
+      - "**/debug-*"
+      - "**/debug.*"
+      - "**/.ipynb_checkpoints/**"
+      - "**/*.pyc"
+      - "**/*.pyo"
+
+  # UC07: Flat Architecture
+  # Warns when source directories lack enough sub-structure.
+  flatArchitecture:
+    enabled: true
+    targets:
+      - path: "src"
+        maxRootFiles: 10
+        minSubdirs: 3
+        excludePatterns: ["__pycache__/**", "*.egg-info/**"]
+      - path: "."
+        maxRootFiles: 15
+        excludePatterns: ["venv/**", ".venv/**", "__pycache__/**", ".git/**", "dist/**"]
+
+  # UC08: Configuration Chaos
+  # Ensures required config files are present at the project root.
+  configChaos:
+    enabled: true
+    requiredConfigs:
+      - ".gitignore"
+      - "requirements.txt"
+    optionalConfigs:
+      - "pyproject.toml"
+      - ".env.example"
+      - "Dockerfile"
+      - "docker-compose.yml"
+      - "pytest.ini"
+      - "mypy.ini"
+
+  # UC09: File Proliferation
+  # Flags versioned filenames like utils_v1.py, helpers_old2.py.
+  fileProliferation:
+    enabled: true
+    threshold: 3
+
+  # UC11: Overcrowded Folders
+  # Warns when a directory contains too many files.
+  overcrowdedFolders:
+    enabled: true
+    targets:
+      - path: "src"
+        maxFiles: 20
+      - path: "src/utils"
+        maxFiles: 15
+      - path: "src/services"
+        maxFiles: 20
+      - path: "src/models"
+        maxFiles: 25
+      - path: "tests"
+        maxFiles: 30
+
+  # UC12: Misplaced Utilities
+  # Flags utility/helper functions defined outside the central utils directory.
+  misplacedUtilities:
+    enabled: true
+    centralLocation: "src/utils"
+
+  # Project Scaffolding (informational)
+  # Tracks whether key scaffold files are present.
+  projectScaffolding:
+    enabled: true
+    rootMaxFiles: 15
+
+  # Dead End Directories (informational)
+  # Detects empty or nearly-empty directories that serve no purpose.
+  deadEnds:
+    enabled: true
+    ignoreGlobs: ["**/venv/**", "**/.venv/**", "**/__pycache__/**", "**/.git/**"]
+    maxFiles: 500
+    timeBudgetMs: 5000
