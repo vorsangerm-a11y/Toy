@@ -17,7 +17,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Copy and install Python dependencies
 COPY requirements.txt .
-RUN pip install --upgrade pip \
+RUN mkdir -p /install \
+    && pip install --upgrade pip \
     && pip install --no-cache-dir --prefix=/install -r requirements.txt
 
 
