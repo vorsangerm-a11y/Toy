@@ -4,12 +4,13 @@
 # Triggers: push to main/develop, pull requests to main
 #
 # Jobs:
-#   1. lint       — ruff, mypy type checking
-#   2. test       — pytest with coverage
-#   3. security   — pip-audit vulnerability scan
-#   4. governance — mock tax, type safety, coverage ratchet, integration pairing
-#   5. mutation   — mutmut mutation testing score
-#   6. build      — Docker image build verification
+#   1. lint        — ruff, mypy type checking
+#   2. test        — pytest with coverage
+#   3. integration — integration test suite
+#   4. security    — pip-audit vulnerability scan
+#   5. governance  — mock tax, type safety, coverage ratchet, integration pairing
+#   6. mutation    — mutmut mutation testing score
+#   7. build       — Docker image build verification
 # =============================================================================
 
 name: CI
@@ -113,7 +114,35 @@ jobs:
           fail_ci_if_error: false
 
   # ---------------------------------------------------------------------------
-  # Job 3: Security Audit
+  # Job 3: Integration Tests
+  # ---------------------------------------------------------------------------
+  integration:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: [test]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      - name: Install dev dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Run integration tests
+        run: |
+          if ls tests/integration/test_*.py 1>/dev/null 2>&1; then
+            pytest tests/integration/ -v --tb=short
+          else
+            echo "No integration tests found — skipping"
+          fi
+
+  # ---------------------------------------------------------------------------
+  # Job 4: Security Audit
   # ---------------------------------------------------------------------------
   security:
     name: Security Audit
