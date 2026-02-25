@@ -1,0 +1,48 @@
+# Windsurf Rules — Toy (Python Project)
+# Same rules as .cursorrules — see that file for full reference.
+
+project:
+  name: Toy
+  stack: Python 3.12
+  architecture: src/ layout
+
+governance:
+  tool: Mault
+  rulebook: docs/mault.yaml
+  enforcement: physics  # commits blocked on violations
+
+file_placement:
+  - pattern: "*_service.py"
+    location: "src/services/"
+  - pattern: "*_repository.py"
+    location: "src/repositories/"
+  - pattern: "*_model.py"
+    location: "src/models/"
+  - pattern: "*_util*.py"
+    location: "src/utils/"
+  - pattern: "test_*.py"
+    location: "tests/"
+
+naming:
+  files: snake_case
+  classes: PascalCase
+  functions: snake_case
+  constants: SCREAMING_SNAKE_CASE
+
+forbidden:
+  - pattern: "print("
+    in: "src/**/*.py"
+    reason: "Use logging module"
+  - pattern: "except:"
+    reason: "Specify exception type"
+  - pattern: "from * import *"
+    reason: "Use explicit imports"
+  - pattern: "breakpoint()"
+    reason: "Remove before committing"
+
+testing:
+  framework: pytest
+  unit_dir: tests/unit/
+  integration_dir: tests/integration/
+  coverage_threshold: 80
+  mock_tax_max_ratio: 2.0

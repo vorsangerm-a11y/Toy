@@ -1,0 +1,56 @@
+{
+  "timestamp": "2026-02-25T12:45:00Z",
+  "stack": "python",
+  "mault_yaml": "docs/mault.yaml",
+  "detections": [
+    {
+      "uc": "UC01",
+      "detector": "directoryReinforcement",
+      "canary_file": "mault-canary/uc01_misplaced_service.py",
+      "expected_dir": "src/services",
+      "detected": true,
+      "message": "Service files should be in src/services/"
+    },
+    {
+      "uc": "UC02",
+      "detector": "legacyPathPrevention",
+      "canary_file": "mault-canary/uc02_deprecated_import.py",
+      "import": "optparse",
+      "detected": true,
+      "message": "optparse is deprecated since Python 2.7. Use 'argparse' instead."
+    },
+    {
+      "uc": "UC03",
+      "detector": "namingConvention",
+      "canary_file": "mault-canary/uc03-BadNaming.py",
+      "detected": true,
+      "message": "File naming violation: expected snake_case"
+    },
+    {
+      "uc": "UC06",
+      "detector": "tempFiles",
+      "canary_file": "mault-canary/temp_scratch.py",
+      "detected": true,
+      "message": "Temporary file detected (matches temp_* pattern)"
+    },
+    {
+      "uc": "UC09",
+      "detector": "fileProliferation",
+      "canary_files": [
+        "mault-canary/uc09_utils_v1.py",
+        "mault-canary/uc09_utils_v2.py",
+        "mault-canary/uc09_utils_v3.py"
+      ],
+      "detected": true,
+      "message": "File proliferation detected: 3 versioned variants (_v1, _v2, _v3)"
+    },
+    {
+      "uc": "UC12",
+      "detector": "misplacedUtilities",
+      "canary_file": "mault-canary/uc12_scattered_helper.py",
+      "central_location": "src/utils",
+      "detected": true,
+      "message": "Helper file outside central utils location"
+    }
+  ]
+}

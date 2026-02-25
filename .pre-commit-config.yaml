@@ -1,0 +1,160 @@
+# =============================================================================
+# Pre-commit Hook Configuration — Python (9 Governance Layers)
+# =============================================================================
+# Install: pip install pre-commit && pre-commit install
+# Run all:  pre-commit run --all-files
+# Update:   pre-commit autoupdate
+#
+# Layers of Protection:
+#   1. Compilation & Static Analysis (ruff + mypy)
+#   2. Rising Tide (Mock Tax) — 2x rule enforcement
+#   3. Ruff Formatting
+#   4. Adversarial Mock Scan
+#   5. Precision Coverage Ratchet
+#   6. Security Gate (pip-audit)
+#   7. Integration Test Pairing check
+#   8. Type Safety Gate (type: ignore ratchet)
+#   9. Dead Code Gate (no bare excepts)
+# =============================================================================
+
+repos:
+  # ===========================================================================
+  # Layer 1: Compilation & Static Analysis
+  # ===========================================================================
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.9.1
+    hooks:
+      - id: ruff
+        name: "Layer 1a: ruff lint"
+        args: [--fix]
+      - id: ruff-format
+        name: "Layer 1b: ruff format"
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.14.1
+    hooks:
+      - id: mypy
+        name: "Layer 1c: mypy type check"
+        args: [--ignore-missing-imports]
+        additional_dependencies: []
+
+  # ===========================================================================
+  # Layer 2: Rising Tide — Mock Tax (2x Rule)
+  # ===========================================================================
+  - repo: local
+    hooks:
+      - id: rising-tide-mock-tax
+        name: "Layer 2: Rising Tide (Mock Tax)"
+        entry: python scripts/governance/check_mock_tax.py
+        language: python
+        types: [python]
+        pass_filenames: false
+        always_run: false
+        files: "^tests/"
+
+  # ===========================================================================
+  # Layer 3: Standard file hygiene
+  # ===========================================================================
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+        name: "Layer 3a: trailing whitespace"
+      - id: end-of-file-fixer
+        name: "Layer 3b: end of file"
+      - id: check-yaml
+        name: "Layer 3c: check yaml"
+      - id: check-toml
+        name: "Layer 3d: check toml"
+      - id: check-added-large-files
+        name: "Layer 3e: large files"
+        args: [--maxkb=500]
+      - id: check-merge-conflict
+        name: "Layer 3f: merge conflicts"
+      - id: debug-statements
+        name: "Layer 3g: no debug statements"
+
+  # ===========================================================================
+  # Layer 4: Adversarial Mock Scan
+  # ===========================================================================
+  - repo: local
+    hooks:
+      - id: adversarial-mock-scan
+        name: "Layer 4: Adversarial Mock Scan"
+        entry: python scripts/governance/check_mock_tax.py --scan-only
+        language: python
+        types: [python]
+        pass_filenames: false
+        files: "^tests/"
+
+  # ===========================================================================
+  # Layer 5: Precision Coverage Ratchet
+  # ===========================================================================
+  - repo: local
+    hooks:
+      - id: coverage-ratchet
+        name: "Layer 5: Coverage Ratchet"
+        entry: python scripts/governance/check_coverage_ratchet.py
+        language: python
+        types: [python]
+        pass_filenames: false
+        always_run: false
+
+  # ===========================================================================
+  # Layer 6: Security Gate
+  # ===========================================================================
+  - repo: local
+    hooks:
+      - id: security-gate
+        name: "Layer 6: Security Gate (pip-audit)"
+        entry: pip-audit -r requirements.txt --severity moderate
+        language: python
+        pass_filenames: false
+        always_run: false
+        additional_dependencies: [pip-audit]
+
+  # ===========================================================================
+  # Layer 7: Integration Test Pairing
+  # ===========================================================================
+  - repo: local
+    hooks:
+      - id: integration-test-pairing
+        name: "Layer 7: Integration Test Pairing"
+        entry: python scripts/governance/check_integration_pairing.py
+        language: python
+        types: [python]
+        pass_filenames: false
+        files: "^src/services/"
+
+  # ===========================================================================
+  # Layer 8: Type Safety Gate (type: ignore ratchet)
+  # ===========================================================================
+  - repo: local
+    hooks:
+      - id: type-safety-gate
+        name: "Layer 8: Type Safety Gate"
+        entry: python scripts/governance/check_type_safety.py
+        language: python
+        types: [python]
+        pass_filenames: false
+        always_run: false
+
+  # ===========================================================================
+  # Layer 9: Dead Code Gate (no bare excepts)
+  # ===========================================================================
+  - repo: local
+    hooks:
+      - id: dead-code-gate
+        name: "Layer 9: Dead Code Gate (bare excepts)"
+        entry: python -c "
+import subprocess, sys
+result = subprocess.run(['grep', '-rn', 'except:', 'src/'], capture_output=True, text=True)
+if result.stdout:
+    print('FAIL: bare except found (use specific exception types):')
+    print(result.stdout)
+    sys.exit(1)
+print('PASS: no bare excepts')
+"
+        language: python
+        pass_filenames: false
+        always_run: false

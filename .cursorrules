@@ -1,0 +1,202 @@
+# =============================================================================
+# Cursor Rules — AI Coder Governance (Python Project)
+# =============================================================================
+# These rules enforce architectural discipline for AI-assisted development.
+# "Agents obey Physics, not Policy" — these are enforced as physics.
+# =============================================================================
+
+## Project: Toy
+## Stack: Python 3.12
+## Architecture: src/ layout with layered services
+
+---
+
+## CRITICAL: Mault is Active
+
+This project uses **Mault** for architectural enforcement. Before coding:
+1. Check the Mault Panel (sidebar) for active findings
+2. FIX all findings before adding new code
+3. Never ignore or defer Mault findings
+
+Mault rulebook: `docs/mault.yaml`
+
+---
+
+## Project Structure
+
+```
+src/
+├── config/       # Configuration (config*.py, settings*.py)
+├── services/     # Business logic (*_service.py)
+├── repositories/ # Data access (*_repository.py, *_dao.py)
+├── models/       # Data models (*_model.py)
+├── utils/        # Shared utilities (*_util*.py, *_helper*.py)
+└── main.py       # Entry point
+
+tests/
+├── unit/         # Fast, isolated (no I/O) — test_*.py
+├── integration/  # Real I/O (database, network) — test_*.py
+└── behavioral/   # End-to-end behavioral tests
+```
+
+---
+
+## Naming Conventions
+
+| Type       | Convention          | Example                    |
+|-----------|---------------------|----------------------------|
+| Files     | snake_case          | `user_service.py`          |
+| Classes   | PascalCase          | `class UserService:`       |
+| Functions | snake_case          | `def get_user():`          |
+| Variables | snake_case          | `user_id = "abc"`          |
+| Constants | SCREAMING_SNAKE     | `MAX_RETRY_COUNT = 3`      |
+
+---
+
+## Physics Rules (NEVER violate)
+
+### 1. No secrets in code
+- Use environment variables from `.env` (never hardcode credentials)
+- `.env` is gitignored — copy from `.env.example`
+
+### 2. No bare except
+```python
+# WRONG
+try:
+    do_thing()
+except:  # bare except — BLOCKED
+    pass
+
+# RIGHT
+try:
+    do_thing()
+except ValueError as e:
+    logger.error(f"Invalid value: {e}")
+```
+
+### 3. No print() in src/
+```python
+# WRONG
+print("debugging...")  # BLOCKED in src/
+
+# RIGHT
+import logging
+logger = logging.getLogger(__name__)
+logger.debug("debugging...")
+```
+
+### 4. No wildcard imports
+```python
+# WRONG
+from utils import *  # BLOCKED
+
+# RIGHT
+from utils.string_helpers import format_name
+```
+
+### 5. No focused tests
+```python
+# WRONG
+@pytest.mark.only  # BLOCKED
+def test_something():
+    ...
+```
+
+### 6. Service classes must end with Service
+```python
+# WRONG
+class UserManager:  # BLOCKED in services/
+    ...
+
+# RIGHT
+class UserService:
+    ...
+```
+
+---
+
+## Pure Core Pattern (TDD)
+
+Business logic must be pure (no I/O imports in services):
+
+```python
+# GOOD: Pure Core — testable without mocking
+class OrderService:
+    def calculate_total(self, items: list[Item]) -> Decimal:
+        return sum(item.price * item.quantity for item in items)
+
+# BAD: I/O mixed in — forces mocking
+class OrderService:
+    def calculate_total(self, order_id: str) -> Decimal:
+        order = db.query(order_id)  # I/O in pure logic — BAD
+        return sum(item.price for item in order.items)
+```
+
+---
+
+## Mock Tax (2x Rule)
+
+If a unit test is > 2x the size of its source file → rewrite as integration test.
+
+```
+Test size vs Source  Verdict
+< 1.0x               Under-tested — add cases
+1.0x - 2.0x          Healthy — maintain
+2.0x - 3.0x          Warning — consider integration test
+> 3.0x               Delete unit test, write integration test
+```
+
+---
+
+## Iron Dome (Type Safety)
+
+Type holes can only DECREASE:
+- Cannot add new `# type: ignore`
+- Cannot add new `Any`
+- Cannot add new `cast()`
+
+Ratchet baseline: `.memory-layer/baselines/type-safety.json`
+
+---
+
+## File Placement Rules (Mault UC01)
+
+| Pattern            | Must be in        |
+|-------------------|-------------------|
+| `*_service.py`    | `src/services/`   |
+| `*_repository.py` | `src/repositories/` |
+| `*_model.py`      | `src/models/`     |
+| `*_util*.py`      | `src/utils/`      |
+| `test_*.py`       | `tests/`          |
+| `config*.py`      | `src/config/`     |
+
+---
+
+## Deprecated Patterns (Mault UC02)
+
+Never use:
+- `import optparse` → use `argparse`
+- `import imp` → use `importlib`
+- `os.system()` → use `subprocess.run()`
+- `os.popen()` → use `subprocess.run()`
+- `hashlib.md5()` → use `hashlib.sha256()`
+- `import mock` → use `unittest.mock`
+- `import nose` → use `pytest`
+
+---
+
+## When Mault Detects an Issue
+
+```
+1. READ the issue message
+2. ASSESS severity:
+   - Severe: Fix immediately
+   - Medium: Fix before committing
+   - Minimal: Fix or add exclusion
+
+3. FIX IT or EXCLUDE IT:
+   // .vscode/settings.json
+   { "mault.excludePatterns": ["path/to/false-positive.py"] }
+
+4. NEVER leave issues unresolved
+```
