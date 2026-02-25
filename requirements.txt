@@ -1,0 +1,15 @@
+# =============================================================================
+# Production Dependencies
+# =============================================================================
+# Pin exact versions for reproducible builds.
+# Update regularly and run: pip-audit -r requirements.txt
+# =============================================================================
+
+# Add your production dependencies here
+# Example:
+# fastapi==0.115.0
+# uvicorn[standard]==0.32.0
+# sqlalchemy==2.0.36
+# alembic==1.14.0
+# pydantic==2.10.3
+# pydantic-settings==2.7.0
