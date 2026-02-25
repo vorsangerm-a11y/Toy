@@ -95,7 +95,12 @@ jobs:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/toydb_test
 
       - name: Run integration tests
-        run: pytest tests/integration/ -v
+        run: |
+          if ls tests/integration/test_*.py 1>/dev/null 2>&1; then
+            pytest tests/integration/ -v
+          else
+            echo "No integration tests found — skipping"
+          fi
         env:
           APP_ENV: test
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/toydb_test
