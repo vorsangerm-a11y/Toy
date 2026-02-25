@@ -6,6 +6,7 @@ Tests are fast, isolated, no mocking needed.
 
 Replace this with your actual unit tests.
 """
+
 import pytest
 
 

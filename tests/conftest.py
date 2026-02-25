@@ -8,6 +8,7 @@ Pure Core Pattern:
 
 Add fixtures here that are shared across multiple test files.
 """
+
 import pytest
 
 
