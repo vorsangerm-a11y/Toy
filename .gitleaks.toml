@@ -1,0 +1,15 @@
+title = "Gitleaks Config"
+
+[allowlist]
+  description = "Global allowlist"
+  paths = [
+    '''test_.*\.py$''',
+    '''.*_test\.py$''',
+    '''tests/''',
+    '''test/''',
+    '''__pycache__/''',
+    '''\.venv/''',
+    '''venv/''',
+    '''poetry\.lock$''',
+    '''Pipfile\.lock$''',
+  ]

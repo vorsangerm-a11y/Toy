@@ -291,7 +291,61 @@ jobs:
           requireScope: false
 
   # ---------------------------------------------------------------------------
-  # Job 8: Branch Name Validation (Step 6 — naming convention enforcement)
+  # Job 8: Secret Detection (Step 8 — gitleaks)
+  # ---------------------------------------------------------------------------
+  secrets:
+    name: Secret Detection
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ---------------------------------------------------------------------------
+  # Job 9: Package Change Audit (Step 8 — dependency flagging)
+  # ---------------------------------------------------------------------------
+  package-audit:
+    name: Package Change Audit
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for dependency changes
+        id: dep-check
+        run: |
+          CHANGED_FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }}...${{ github.sha }})
+          PKG_CHANGED=false
+          LOCK_CHANGED=false
+
+          echo "$CHANGED_FILES" | grep -q "^requirements.*\.txt$" && PKG_CHANGED=true
+          echo "$CHANGED_FILES" | grep -q "^pyproject\.toml$" && PKG_CHANGED=true
+          echo "$CHANGED_FILES" | grep -q "^setup\.py$" && PKG_CHANGED=true
+          echo "$CHANGED_FILES" | grep -q "^setup\.cfg$" && PKG_CHANGED=true
+          echo "$CHANGED_FILES" | grep -q "^Pipfile$" && PKG_CHANGED=true
+          echo "$CHANGED_FILES" | grep -q "^poetry\.lock$" && LOCK_CHANGED=true
+          echo "$CHANGED_FILES" | grep -q "^Pipfile\.lock$" && LOCK_CHANGED=true
+          echo "$CHANGED_FILES" | grep -q "^requirements.*\.txt$" && LOCK_CHANGED=true
+
+          echo "pkg_changed=$PKG_CHANGED" >> $GITHUB_OUTPUT
+          echo "lock_changed=$LOCK_CHANGED" >> $GITHUB_OUTPUT
+
+      - name: Flag dependency changes
+        if: steps.dep-check.outputs.pkg_changed == 'true' || steps.dep-check.outputs.lock_changed == 'true'
+        run: |
+          echo "::warning::DEPENDENCY CHANGE DETECTED — Review dependency files carefully."
+          echo "## Dependency Changes Detected" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "This PR modifies Python dependencies. Please review:" >> $GITHUB_STEP_SUMMARY
+          echo "- [ ] New packages are from trusted sources (PyPI)" >> $GITHUB_STEP_SUMMARY
+          echo "- [ ] No typosquatted package names" >> $GITHUB_STEP_SUMMARY
+          echo "- [ ] Lock file changes match requirements intent" >> $GITHUB_STEP_SUMMARY
+
+  # ---------------------------------------------------------------------------
+  # Job 10: Branch Name Validation (Step 6 — naming convention enforcement)
   # ---------------------------------------------------------------------------
   validate-branch-name:
     if: github.event_name == 'pull_request'

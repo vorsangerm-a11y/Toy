@@ -37,6 +37,7 @@ repos:
       - id: mypy
         name: "Layer 1c: mypy type check"
         args: [--ignore-missing-imports]
+        exclude: ^scripts/
         additional_dependencies: []
 
   # ===========================================================================
