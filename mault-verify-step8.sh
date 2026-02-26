@@ -241,7 +241,8 @@ check 16 "CI Security: secret detection configured (gitleaks)" "$SEC_OK"
 # ---------------------------------------------------------------------------
 HS_OK="FAIL"
 if [ -f ".mault/governance-manifest.json" ]; then
-  if git log --oneline -20 2>/dev/null | grep -q "\[mault-step8\]"; then
+  GIT_LOG=$(git log --oneline -20 2>/dev/null || true)
+  if echo "$GIT_LOG" | grep -q "\[mault-step8\]"; then
     HS_OK="PASS"
   fi
 fi
