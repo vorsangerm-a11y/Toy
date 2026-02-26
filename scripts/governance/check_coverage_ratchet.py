@@ -53,7 +53,7 @@ def load_baseline() -> dict[str, float]:
 
 def save_baseline(coverage: dict[str, float]) -> None:
     BASELINE_FILE.parent.mkdir(parents=True, exist_ok=True)
-    BASELINE_FILE.write_text(json.dumps(coverage, indent=2))
+    BASELINE_FILE.write_text(json.dumps(coverage, indent=2) + "\n")
 
 
 def check_coverage_ratchet() -> int:
